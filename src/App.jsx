@@ -10,9 +10,7 @@ function App () {
     <Routes>
       {/* Rutas envueltas por el Layout */}
       <Route element={<Layout />}>
-
         <Route path='/' element={<HomePage />} />
-
       </Route>
 
       {/* Rutas fuera del Layout */}

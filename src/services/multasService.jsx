@@ -1,9 +1,9 @@
-import juzgadoApi from '../api/juzgadoApi'
+import juzgadoApi from '@/api/juzgadoApi'
 export const setUrlParams = (filters) => {
   const params = new URLSearchParams()
 
   Object.entries(filters).forEach(([key, value]) => {
-    if (value) { // Solo agrega parámetros con valores definidos
+    if (value) {
       params.append(key, value)
     }
   })

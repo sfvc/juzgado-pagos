@@ -3,9 +3,9 @@ import { Button, TextInput } from 'flowbite-react'
 import { HelpCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { getActaById } from '../services/multasService'
-import logo from '../images/logo-capital-dark.webp'
-import DefaultFooter from '../assets/layout/DefaultFooter'
+import { getActaById } from '@/services/multasService'
+import logo from '@/images/logo-capital-dark.webp'
+import DefaultFooter from '@/assets/layout/DefaultFooter'
 
 export default function HomePage () {
   const [enabled, setEnabled] = useState(false)

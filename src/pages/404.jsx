@@ -1,18 +1,16 @@
 import React from 'react'
 import { Link } from 'react-router-dom'
-import Illustration from '../images/logo_CATACAPI_oscuro.png'
+import Illustration from '@/images/logo_CATACAPI_oscuro.png'
 
 function Error () {
   return (
     <div className='min-h-screen flex flex-col justify-center items-center text-center py-20 dark:bg-slate-900 bg-gray-100'>
-      {/* Logo o ilustración */}
       <img
         src={Illustration}
         alt='Página no encontrada'
         className='pointer-events-none h-48 w-auto mb-8'
       />
 
-      {/* Contenido de error */}
       <div className='max-w-[546px] mx-auto w-full'>
         <h4 className='text-slate-900 dark:text-white text-2xl font-semibold mb-4'>
           Oops! Página no encontrada
@@ -22,7 +20,6 @@ function Error () {
         </p>
       </div>
 
-      {/* Botón de regreso */}
       <div className='max-w-[300px] mx-auto w-full'>
         <Link
           to='/'
