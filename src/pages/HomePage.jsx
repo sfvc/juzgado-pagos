@@ -32,7 +32,7 @@ export default function HomePage () {
     }
   }
 
-  const { data, error, isLoading } = useQuery({
+  const { data, isLoading } = useQuery({
     queryKey: ['actas', filters],
     queryFn: () => getActaById(filters),
     enabled
@@ -63,7 +63,7 @@ export default function HomePage () {
       </header>
 
       <main className='flex flex-1 justify-center items-center px-4 py-12'>
-        <div className='bg-white dark:bg-slate-800 shadow-xl rounded-lg p-8 w-full max-w-xl text-center space-y-8'>
+        <div className='bg-white dark:bg-slate-800 shadow-xl rounded-lg p-6 sm:p-8 w-full max-w-xl text-center space-y-8'>
           <p className='text-gray-700 dark:text-slate-400 mb-6 font-semibold text-lg'>
             Consulta y pagá tus multas de manera rápida y sencilla.
           </p>
@@ -71,7 +71,7 @@ export default function HomePage () {
           {!hasSearched
             ? (
               <div>
-                <div className='space-y-8'>
+                <div className='space-y-6 sm:space-y-8'>
 
                   <TextInput
                     name='id'
@@ -122,35 +122,44 @@ export default function HomePage () {
                 </div>
 
                 {isLoading && <p className='text-blue-600 mt-4'>Cargando...</p>}
-                {error && <p className='text-red-600 mt-4'>Error: No se encontró ninguna multa.</p>}
               </div>
               )
             : (
               <div className='bg-gray-50 dark:bg-slate-700 p-8 rounded-lg shadow-xl'>
-                <h2 className='font-semibold text-2xl text-blue-600 mb-6'>Multa Encontrada</h2>
-                <div className='space-y-6'>
-                  {[
-                    ['Apellido y Nombre', data?.infractores?.[0]?.nombre || 'No disponible'],
-                    ['Numero de Acta', data?.numero_acta || 'No disponible'],
-                    ['Tipo de Acta', data?.tipo_acta || 'No disponible'],
-                    ['Fecha', data?.fecha || 'No disponible'],
-                    ['Estado', data?.estados?.[0]?.nombre || 'Sin estado'],
-                    // ['Infracción', data?.infracciones_cometidas?.[0]?.detalle || 'No hay infracción'],
-                    ['Vehículo', data?.vehiculo?.dominio || 'No disponible'],
-                    ['Observaciones', data?.observaciones || 'No hay observaciones'],
-                    ['Calle', data?.calle || 'No disponible']
-                  ].map(([label, value]) => (
-                    <div key={label} className='flex justify-between'>
-                      <span className='font-medium'>{label}:</span>
-                      <span>{value}</span>
+                <h2 className='font-semibold text-2xl text-blue-600 mb-6'>Multa(s) Encontrada(s)</h2>
+                <div className='space-y-6 sm:space-y-8'>
+                  <div className='bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md'>
+                    {[
+                      ['Apellido y Nombre', data?.infractores?.[0]?.nombre || 'No disponible'],
+                      ['Número de Acta', data?.numero_acta || 'No disponible'],
+                      ['Tipo de Acta', data?.tipo_acta || 'No disponible'],
+                      ['Fecha', data?.fecha || 'No disponible'],
+                      ['Vehículo', data?.vehiculo?.dominio || 'No disponible'],
+                      ['Observaciones', data?.observaciones || 'No hay observaciones'],
+                      ['Calle', data?.calle || 'No disponible'],
+                      ['Estado', data?.estados[0]?.nombre || 'No disponible']
+                    ].map(([label, value]) => (
+                      <div key={label} className='flex flex-wrap justify-between text-sm sm:text-base'>
+                        <span className='font-medium'>{label}:</span>
+                        <span className='max-w-full truncate'>{value}</span> {/* Clase truncate para evitar desbordes */}
+                      </div>
+                    ))}
+
+                    <div className='mt-6'>
+                      <Button
+                        onClick={() => alert('Redirigiendo a la pasarela de pagos...')}
+                        className='w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg shadow-xl transition-all ease-in-out duration-300'
+                      >
+                        Proceder al pago
+                      </Button>
                     </div>
-                  ))}
+                  </div>
                 </div>
 
                 <div className='mt-8'>
                   <Button
                     onClick={handleConsultAgain}
-                    className='w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg shadow-xl transition-all ease-in-out duration-300'
+                    className='w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg shadow-xl mt-4 transition-all ease-in-out duration-300'
                   >
                     Consultar nuevamente
                   </Button>
