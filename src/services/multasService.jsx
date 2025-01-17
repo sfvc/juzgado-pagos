@@ -1,15 +1,4 @@
 import juzgadoApi from '@/api/juzgadoApi'
-export const setUrlParams = (filters) => {
-  const params = new URLSearchParams()
-
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value) {
-      params.append(key, value)
-    }
-  })
-
-  return params
-}
 
 export const getDataFilter = async () => {
   const response = await juzgadoApi.get('actas-data')
@@ -17,11 +6,13 @@ export const getDataFilter = async () => {
 }
 
 export const getActasFilter = async (filters) => {
-  const params = setUrlParams(filters)
+  let params = {}
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value !== '') params = { ...params, [key]: value }
+  })
 
   const response = await juzgadoApi.get('/actas/filtrar', { params })
-  const { data, meta } = response.data
-  return { data, meta }
+  return response.data
 }
 
 export const getActaById = async (filters) => {

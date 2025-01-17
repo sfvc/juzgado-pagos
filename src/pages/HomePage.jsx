@@ -1,21 +1,25 @@
+/* eslint-disable camelcase */
 import React, { useState } from 'react'
 import { Button, TextInput } from 'flowbite-react'
 import { HelpCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { getActaById } from '@/services/multasService'
+import { getActasFilter } from '@/services/multasService'
 import logo from '@/images/logo-capital-dark.webp'
 import DefaultFooter from '@/assets/layout/DefaultFooter'
+import SearchInfractor from '@/assets/components/SearchInfractor'
+import SearchVehiculo from '@/assets/components/SearchVehiculo'
+import Loading from '@/Loading'
 
 export default function HomePage () {
   const [enabled, setEnabled] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [filters, setFilters] = useState({
-    id: '',
-    dni: '',
-    numeroActa: '',
-    patente: ''
+    persona_id: '',
+    numero_acta: '',
+    vehiculo_id: ''
   })
+  const isButtonDisabled = !Object.values(filters).some((filter) => filter !== '')
 
   const handleInputChange = (e) => {
     const { name, value } = e.target
@@ -25,30 +29,25 @@ export default function HomePage () {
     }))
   }
 
-  const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault()
-      handleSubmit()
-    }
-  }
-
   const { data, isLoading } = useQuery({
     queryKey: ['actas', filters],
-    queryFn: () => getActaById(filters),
+    queryFn: () => getActasFilter(filters),
     enabled
   })
 
   const handleSubmit = () => {
-    setEnabled(true)
-    setHasSearched(true)
+    setEnabled(false)
+    setTimeout(() => {
+      setEnabled(true)
+      setHasSearched(true)
+    }, 0)
   }
 
   const handleConsultAgain = () => {
     setFilters({
-      id: '',
-      dni: '',
-      numeroActa: '',
-      patente: ''
+      persona_id: '',
+      numero_acta: '',
+      vehiculo_id: ''
     })
     setEnabled(false)
     setHasSearched(false)
@@ -63,7 +62,7 @@ export default function HomePage () {
       </header>
 
       <main className='flex flex-1 justify-center items-center px-4 py-12'>
-        <div className='bg-white dark:bg-slate-800 shadow-xl rounded-lg p-6 sm:p-8 w-full max-w-xl text-center space-y-8'>
+        <div className='bg-white dark:bg-slate-800 shadow-xl rounded-lg p-6 sm:p-8 w-full max-w-3xl text-center space-y-8'>
           <p className='text-gray-700 dark:text-slate-400 mb-6 font-semibold text-lg'>
             Consulta y pagá tus multas de manera rápida y sencilla.
           </p>
@@ -71,88 +70,116 @@ export default function HomePage () {
           {!hasSearched
             ? (
               <div>
-                <div className='space-y-6 sm:space-y-8'>
-
-                  <TextInput
-                    name='id'
-                    value={filters.id}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    type='text'
-                    placeholder='ID'
-                    className='w-full rounded-lg dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-700 transition duration-300 ease-in-out'
+                <div className='space-y-4 sm:space-y-4'>
+                  <SearchInfractor
+                    resetFiltro={!enabled}
+                    onSelectPersona={({ persona_id }) =>
+                      setFilters((prev) => ({ ...prev, persona_id }))}
                   />
 
-                  <TextInput
-                    name='dni'
-                    value={filters.dni}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    type='text'
-                    placeholder='DNI'
-                    className='w-full rounded-lg dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-700 transition duration-300 ease-in-out'
+                  <div className='my-1 flex justify-center items-center pointer-events-none'>
+                    <span className='text-gray-600 dark:text-slate-400 pointer-events-none hidden md:flex'>
+                      ───────────────────── o ─────────────────────
+                    </span>
+                    <span className='text-gray-600 dark:text-slate-400 pointer-events-none md:hidden'>
+                      ─────── o ───────
+                    </span>
+                  </div>
+
+                  <SearchVehiculo
+                    resetFiltro={!enabled}
+                    onSelectVehiculo={({ vehiculo_id }) =>
+                      setFilters((prev) => ({ ...prev, vehiculo_id }))}
                   />
 
+                  <div className='my-4 flex justify-center items-center pointer-events-none'>
+                    <span className='text-gray-600 dark:text-slate-400 pointer-events-none hidden md:flex'>
+                      ───────────────────── o ─────────────────────
+                    </span>
+                    <span className='text-gray-600 dark:text-slate-400 pointer-events-none md:hidden'>
+                      ─────── o ───────
+                    </span>
+                  </div>
+
                   <TextInput
-                    name='numeroActa'
-                    value={filters.numeroActa}
+                    name='numero_acta'
                     onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
                     type='text'
                     placeholder='Número de Acta'
                     className='w-full rounded-lg dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-700 transition duration-300 ease-in-out'
                   />
 
-                  <TextInput
-                    name='patente'
-                    value={filters.patente}
-                    onChange={handleInputChange}
-                    onKeyDown={handleKeyDown}
-                    type='text'
-                    placeholder='Patente'
-                    className='w-full rounded-lg dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-700 transition duration-300 ease-in-out'
-                  />
-
                   <Button
                     onClick={handleSubmit}
-                    className='w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg shadow-xl transition-all ease-in-out duration-300'
+                    className={`w-full py-3 rounded-lg shadow-xl transition-all ease-in-out duration-300 ${isButtonDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                    disabled={isButtonDisabled}
                   >
                     Consultar
                   </Button>
                 </div>
 
-                {isLoading && <p className='text-blue-600 mt-4'>Cargando...</p>}
+                {isLoading && <Loading />}
               </div>
               )
             : (
-              <div className='bg-gray-50 dark:bg-slate-700 p-8 rounded-lg shadow-xl'>
-                <h2 className='font-semibold text-2xl text-blue-600 mb-6'>Multa(s) Encontrada(s)</h2>
-                <div className='space-y-6 sm:space-y-8'>
-                  <div className='bg-white dark:bg-slate-800 p-4 rounded-lg shadow-md'>
-                    {[
-                      ['Apellido y Nombre', data?.infractores?.[0]?.nombre || 'No disponible'],
-                      ['Número de Acta', data?.numero_acta || 'No disponible'],
-                      ['Tipo de Acta', data?.tipo_acta || 'No disponible'],
-                      ['Fecha', data?.fecha || 'No disponible'],
-                      ['Vehículo', data?.vehiculo?.dominio || 'No disponible'],
-                      ['Observaciones', data?.observaciones || 'No hay observaciones'],
-                      ['Calle', data?.calle || 'No disponible'],
-                      ['Estado', data?.estados[0]?.nombre || 'No disponible']
-                    ].map(([label, value]) => (
-                      <div key={label} className='flex flex-wrap justify-between text-sm sm:text-base'>
-                        <span className='font-medium'>{label}:</span>
-                        <span className='max-w-full truncate'>{value}</span> {/* Clase truncate para evitar desbordes */}
-                      </div>
-                    ))}
+              <div>
+                <div className='bg-gray-50 dark:bg-slate-700 p-8 rounded-lg shadow-xl'>
+                  {isLoading && <Loading />}
 
-                    <div className='mt-6'>
-                      <Button
-                        onClick={() => alert('Redirigiendo a la pasarela de pagos...')}
-                        className='w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg shadow-xl transition-all ease-in-out duration-300'
-                      >
-                        Proceder al pago
-                      </Button>
-                    </div>
+                  <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8'>
+                    {Array.isArray(data?.data) && data?.data.length > 0
+                      ? (
+                          data?.data.map((multa, index) => {
+                            const estado = multa?.estados?.[0]?.nombre?.toLowerCase()
+                            const showPaymentButton = !(estado === 'pagada' || estado === 'terminada' || estado === 'con notificación de resolución')
+
+                            return (
+                              <div
+                                key={index}
+                                className='bg-white dark:bg-slate-800 rounded-lg shadow-2xl p-8 space-y-6 transition-all duration-300 hover:shadow-3xl'
+                              >
+                                <div className='text-sm font-semibold text-gray-700 dark:text-slate-200'>
+                                  <span className='block text-lg'>Apellido y Nombre:</span>
+                                  {multa?.infractores?.[0]?.nombre || 'No disponible'}
+                                </div>
+                                <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                  <span className='block text-lg'>Número de Acta:</span> {multa?.numero_acta || 'No disponible'}
+                                </div>
+                                <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                  <span className='block text-lg'>Tipo de Acta:</span> {multa?.tipo_acta || 'No disponible'}
+                                </div>
+                                <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                  <span className='block text-lg'>Fecha:</span> {multa?.fecha || 'No disponible'}
+                                </div>
+                                <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                  <span className='block text-lg'>Vehículo:</span> {multa?.vehiculo?.dominio || 'No disponible'}
+                                </div>
+                                <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                  <span className='block text-lg'>Observaciones:</span> {multa?.observaciones || 'No hay observaciones'}
+                                </div>
+                                <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                  <span className='block text-lg'>Calle:</span> {multa?.calle || 'No disponible'}
+                                </div>
+                                <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                  <span className='block text-lg'>Estado:</span> {multa?.estados?.[0]?.nombre || 'No disponible'}
+                                </div>
+
+                                {showPaymentButton && (
+                                  <Button
+                                    className='w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg mt-4 transition-all ease-in-out duration-300'
+                                  >
+                                    Proceder al pago
+                                  </Button>
+                                )}
+                              </div>
+                            )
+                          })
+                        )
+                      : !isLoading && (
+                        <div className='col-span-3 text-center text-gray-600 dark:text-slate-400'>
+                          No se encontraron resultados.
+                        </div>
+                        )}
                   </div>
                 </div>
 
