@@ -1,10 +1,11 @@
 /* eslint-disable camelcase */
 import React, { useState } from 'react'
-import { Button, TextInput } from 'flowbite-react'
+import { Button, TextInput, Toast } from 'flowbite-react'
 import { HelpCircle } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { getActasFilter } from '@/services/multasService'
+import ReCAPTCHA from 'react-google-recaptcha'
 import logo from '@/images/logo-capital-dark.webp'
 import DefaultFooter from '@/assets/layout/DefaultFooter'
 import SearchInfractor from '@/assets/components/SearchInfractor'
@@ -14,6 +15,7 @@ import Loading from '@/Loading'
 export default function HomePage () {
   const [enabled, setEnabled] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
+  const [captchaVerified, setCaptchaVerified] = useState(false)
   const [filters, setFilters] = useState({
     persona_id: '',
     numero_acta: '',
@@ -34,6 +36,17 @@ export default function HomePage () {
     queryFn: () => getActasFilter(filters),
     enabled
   })
+
+  const handleCaptchaChange = (value) => {
+    if (value) {
+      setTimeout(() => {
+        setCaptchaVerified(true)
+      }, 0)
+    } else {
+      setCaptchaVerified(false)
+      Toast.error('Por favor, completa el CAPTCHA.')
+    }
+  }
 
   const handleSubmit = () => {
     setEnabled(false)
@@ -57,7 +70,7 @@ export default function HomePage () {
     <div className='min-h-screen flex flex-col bg-gradient-to-r from-blue-50 via-blue-100 to-blue-200 dark:bg-slate-900'>
       <header className='navbar__muni text-white py-2'>
         <div className='container mx-auto flex justify-between items-center'>
-          <img src={logo} alt='Logo Catamarca' className='max-w-full h-12 w-auto m-2' />
+          <a href='https://www.catamarcaciudad.gob.ar' target='_blank' rel='noreferrer'><img src={logo} alt='Logo Catamarca' className='max-w-full h-12 w-auto m-2' /></a>
         </div>
       </header>
 
@@ -109,13 +122,27 @@ export default function HomePage () {
                     className='w-full rounded-lg dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-600 dark:focus:ring-blue-700 transition duration-300 ease-in-out'
                   />
 
-                  <Button
-                    onClick={handleSubmit}
-                    className={`w-full py-3 rounded-lg shadow-xl transition-all ease-in-out duration-300 ${isButtonDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
-                    disabled={isButtonDisabled}
-                  >
-                    Consultar
-                  </Button>
+                  {!captchaVerified && (
+                    <div className='flex justify-center mb-6 mt-6'>
+                      <ReCAPTCHA
+                        // Produccion
+                        sitekey='6Lfp8sAqAAAAAL9rfnjGHA2qxyUwpJ3vZcRng04x'
+                        // LocalHost
+                        // sitekey='6LeAwp8qAAAAABhAYn5FDw_uIzk8bskuHIP_sBIw'
+                        onChange={handleCaptchaChange}
+                      />
+                    </div>
+                  )}
+
+                  {captchaVerified && (
+                    <Button
+                      onClick={handleSubmit}
+                      className={`w-full py-3 rounded-lg shadow-xl transition-all ease-in-out duration-300 ${isButtonDisabled ? 'bg-gray-400 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                      disabled={isButtonDisabled}
+                    >
+                      Consultar
+                    </Button>
+                  )}
                 </div>
 
                 {isLoading && <Loading />}
@@ -129,51 +156,51 @@ export default function HomePage () {
                   <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-8'>
                     {Array.isArray(data?.data) && data?.data.length > 0
                       ? (
-                          data?.data.map((multa, index) => {
-                            const estado = multa?.estados?.[0]?.nombre?.toLowerCase()
-                            const showPaymentButton = !(estado === 'pagada' || estado === 'terminada' || estado === 'con notificación de resolución')
+                          (() => {
+                            const filteredData = data?.data.filter((multa) => {
+                              const estado = multa?.estados?.[0]?.nombre?.toLowerCase()
+                              return !(estado === 'pagada' || estado === 'terminada')
+                            })
 
-                            return (
-                              <div
-                                key={index}
-                                className='bg-white dark:bg-slate-800 rounded-lg shadow-2xl p-8 space-y-6 transition-all duration-300 hover:shadow-3xl'
-                              >
-                                <div className='text-sm font-semibold text-gray-700 dark:text-slate-200'>
-                                  <span className='block text-lg'>Apellido y Nombre:</span>
-                                  {multa?.infractores?.[0]?.nombre || 'No disponible'}
+                            return filteredData.length > 0
+                              ? filteredData.map((multa, index) => (
+                                <div
+                                  key={index}
+                                  className='bg-white dark:bg-slate-800 rounded-lg shadow-2xl p-8 space-y-6 transition-all duration-300 hover:shadow-3xl'
+                                >
+                                  <div className='text-sm font-semibold text-gray-700 dark:text-slate-200'>
+                                    <span className='block text-lg'>Apellido y Nombre:</span>
+                                    {multa?.infractores?.[0]?.nombre || 'No disponible'}
+                                  </div>
+                                  <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                    <span className='block text-lg'>Número de Acta:</span> {multa?.numero_acta || 'No disponible'}
+                                  </div>
+                                  <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                    <span className='block text-lg'>Tipo de Acta:</span> {multa?.tipo_acta || 'No disponible'}
+                                  </div>
+                                  <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                    <span className='block text-lg'>Fecha:</span> {multa?.fecha || 'No disponible'}
+                                  </div>
+                                  <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                    <span className='block text-lg'>Vehículo:</span> {multa?.vehiculo?.dominio || 'No disponible'}
+                                  </div>
+                                  <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                    <span className='block text-lg'>Observaciones:</span> {multa?.observaciones || 'No hay observaciones'}
+                                  </div>
+                                  <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                    <span className='block text-lg'>Calle:</span> {multa?.calle || 'No disponible'}
+                                  </div>
+                                  <div className='text-sm text-gray-600 dark:text-slate-400'>
+                                    <span className='block text-lg'>Estado:</span> {multa?.estados?.[0]?.nombre || 'No disponible'}
+                                  </div>
                                 </div>
-                                <div className='text-sm text-gray-600 dark:text-slate-400'>
-                                  <span className='block text-lg'>Número de Acta:</span> {multa?.numero_acta || 'No disponible'}
+                              ))
+                              : (
+                                <div className='col-span-3 text-center text-gray-600 dark:text-slate-400'>
+                                  No se encontraron resultados.
                                 </div>
-                                <div className='text-sm text-gray-600 dark:text-slate-400'>
-                                  <span className='block text-lg'>Tipo de Acta:</span> {multa?.tipo_acta || 'No disponible'}
-                                </div>
-                                <div className='text-sm text-gray-600 dark:text-slate-400'>
-                                  <span className='block text-lg'>Fecha:</span> {multa?.fecha || 'No disponible'}
-                                </div>
-                                <div className='text-sm text-gray-600 dark:text-slate-400'>
-                                  <span className='block text-lg'>Vehículo:</span> {multa?.vehiculo?.dominio || 'No disponible'}
-                                </div>
-                                <div className='text-sm text-gray-600 dark:text-slate-400'>
-                                  <span className='block text-lg'>Observaciones:</span> {multa?.observaciones || 'No hay observaciones'}
-                                </div>
-                                <div className='text-sm text-gray-600 dark:text-slate-400'>
-                                  <span className='block text-lg'>Calle:</span> {multa?.calle || 'No disponible'}
-                                </div>
-                                <div className='text-sm text-gray-600 dark:text-slate-400'>
-                                  <span className='block text-lg'>Estado:</span> {multa?.estados?.[0]?.nombre || 'No disponible'}
-                                </div>
-
-                                {showPaymentButton && (
-                                  <Button
-                                    className='w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg mt-4 transition-all ease-in-out duration-300'
-                                  >
-                                    Proceder al pago
-                                  </Button>
-                                )}
-                              </div>
-                            )
-                          })
+                                )
+                          })()
                         )
                       : !isLoading && (
                         <div className='col-span-3 text-center text-gray-600 dark:text-slate-400'>
